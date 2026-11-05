@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6d2db">
+<title>纸牌历 / The Solitaire Calendar</title>
+<meta name="description" content="纸牌历 / The Solitaire Calendar：13 个月 × 28 天、52 周扑克牌历，以花色分四季，以大小丑角收尾。">
+<meta name="application-name" content="纸牌历">
+<meta name="apple-mobile-web-app-title" content="纸牌历">
+<meta property="og:title" content="纸牌历 / The Solitaire Calendar">
+<meta property="og:description" content="13 个月 × 28 天、52 周扑克牌历，以花色分四季，以大小丑角收尾。">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --ink:#2c3138;
+    --muted:#6d7480;
+    --line:rgba(44,49,56,.14);
+    --shadow:rgba(80,60,50,.18);
+    --accent:#4f6170;
+    --bg1:#f7fafb;
+    --bg2:#e9eff2;
+    --bg3:#dbe4e9;
+  }
+  body[data-season="spring"]{
+    --accent:#9e4560;
+    --bg1:#fde7ec;
+    --bg2:#f6d2db;
+    --bg3:#eec2cd;
+  }
+  body[data-season="summer"]{
+    --accent:#4f7a3c;
+    --bg1:#eaf6e1;
+    --bg2:#d7ecc9;
+    --bg3:#c6dfb5;
+  }
+  body[data-season="autumn"]{
+    --accent:#8f5a17;
+    --bg1:#fceccd;
+    --bg2:#f5d9a6;
+    --bg3:#ecc98a;
+  }
+  body[data-season="winter"]{
+    --accent:#4f6170;
+    --bg1:#f7fafb;
+    --bg2:#e9eff2;
+    --bg3:#dbe4e9;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg3);
+    color:var(--ink);
+    font-family:ui-monospace,"SFMono-Regular","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace;
+    position:relative;
+    z-index:0;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:radial-gradient(120% 85% at 50% 0%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+  }
+  .app{
+    width:100%;
+    max-width:560px;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:clamp(8px,2.2vh,22px) clamp(10px,4vw,28px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:clamp(8px,1.6vh,16px);
+  }
+  .content{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(6px,1.4vh,16px);
+  }
+  .intro{
+    width:100%;
+    max-width:520px;
+    margin:0 auto;
+    padding:2px 2px 2px;
+    text-align:left;
+  }
+  .intro-title{
+    margin:0 0 5px;
+    font-family:Georgia,"Songti SC","SimSun",serif;
+    font-size:clamp(.7rem,3.2vw,1.02rem);
+    line-height:1.25;
+    font-weight:700;
+    letter-spacing:0;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .intro-title .en{
+    color:var(--accent);
+    font-weight:400;
+  }
+  .intro-cn,
+  .intro-en{
+    margin:0;
+    font-size:clamp(.62rem,2.15vw,.76rem);
+    line-height:1.62;
+    color:var(--ink);
+  }
+  .intro-cn{
+    font-family:"Songti SC","SimSun",Georgia,serif;
+  }
+  .intro-en{
+    margin-top:5px;
+    font-family:Georgia,"Times New Roman",serif;
+    color:var(--muted);
+  }
+  .intro-en em{
+    font-style:italic;
+  }
+  .topbar{
+    width:100%;
+    max-width:380px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .back-row{
+    height:24px;
+    display:flex;
+    align-items:center;
+  }
+  .back{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    height:22px;
+    padding:0 7px;
+    font-family:inherit;
+    font-size:clamp(.56rem,1.8vw,.66rem);
+    letter-spacing:.02em;
+    color:var(--ink);
+    background:rgba(255,255,255,.42);
+    border:1px solid rgba(44,49,56,.18);
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .back[hidden]{display:none;}
+  .back-arrow{
+    color:var(--accent);
+    font-size:1.08em;
+    line-height:1;
+  }
+  .search{
+    width:100%;
+    padding:5px 7px 6px;
+    background:rgba(255,255,255,.42);
+    border:1px solid rgba(44,49,56,.18);
+    border-radius:4px;
+    box-shadow:0 2px 0 rgba(44,49,56,.08);
+  }
+  .search-label{
+    font-size:clamp(.54rem,1.7vw,.6rem);
+    letter-spacing:.06em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .search-controls{
+    display:flex;
+    align-items:flex-end;
+    gap:5px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    min-width:0;
+    font-size:clamp(.5rem,1.55vw,.58rem);
+    letter-spacing:.02em;
+    color:var(--muted);
+  }
+  .field:nth-child(1){flex:1.1;}
+  .field:nth-child(2){flex:1.45;}
+  .field:nth-child(3){flex:.9;}
+  .field select{
+    width:100%;
+    height:26px;
+    padding:2px 3px;
+    font-family:inherit;
+    font-size:clamp(.66rem,2.1vw,.74rem);
+    color:var(--ink);
+    background:rgba(255,255,255,.7);
+    border:1px solid rgba(44,49,56,.2);
+    border-radius:3px;
+  }
+  .search-btn{
+    flex:0 0 28px;
+    width:28px;
+    height:26px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    color:rgba(255,255,255,.92);
+    background:var(--accent);
+    border:1px solid rgba(44,49,56,.18);
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .search-btn:active{transform:translateY(1px);}
+  .card-wrap{
+    width:min(86vw, 380px);
+    aspect-ratio:7/10;
+    filter:drop-shadow(0 16px 24px var(--shadow));
+    position:relative;
+    flex:0 0 auto;
+  }
+  .card-wrap::after{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    border:2px solid rgba(44,49,56,.1);
+    pointer-events:none;
+  }
+  svg.card{display:block;width:100%;height:100%;}
+  .poker{
+    text-align:center;
+    line-height:1.45;
+    max-width:100%;
+  }
+  .poker-cn{
+    font-size:clamp(1.06rem,4.2vw,1.2rem);
+    letter-spacing:.05em;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .poker-en{
+    font-family:Georgia,"Times New Roman","Songti SC",serif;
+    font-size:clamp(.68rem,2.4vw,.82rem);
+    letter-spacing:.04em;
+    color:var(--accent);
+    margin-top:2px;
+    text-wrap:balance;
+  }
+  .greg{
+    width:100%;
+    max-width:460px;
+    text-align:center;
+    font-size:clamp(.62rem,2vw,.76rem);
+    letter-spacing:.04em;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:clamp(4px,.8vh,8px);
+    white-space:nowrap;
+  }
+  @media (max-width:330px){
+    .poker-cn{font-size:1rem;letter-spacing:.03em;}
+    .poker-en{font-size:.64rem;letter-spacing:.02em;}
+  }
+  @media (max-height:600px){
+    .app{padding-top:6px;padding-bottom:6px;}
+    .content{gap:6px;}
+  }
+</style>
+</head>
+<body data-season="spring">
+<main class="app" aria-live="polite">
+  <section class="intro">
+    <h1 class="intro-title">关于《纸牌历》 <span class="en">/ About the Solitaire Calendar</span></h1>
+    <p class="intro-cn">这副日历的灵感来自乔斯坦·贾德的《纸牌的秘密》。愿你这张没有点数也没有花色的丑角牌，在这个世界上的条条框框之外，永远留着一份好奇、一点荒诞，一身自由。由此掀开你的今日——</p>
+    <p class="intro-en">Inspired by Jostein Gaarder's <em>The Solitaire Mystery</em>. May you be the Joker—the card with no rank and no suit. Beyond the rules and boxes of this world, may there always remain a measure of curiosity, a touch of absurdity, and a freedom all your own. And from there, your today begins—</p>
+  </section>
+  <header class="topbar">
+    <div class="back-row">
+      <button class="back" id="backBtn" type="button" hidden>
+        <span class="back-arrow" aria-hidden="true">←</span>
+        <span>返回今日 / Return to Today</span>
+      </button>
+    </div>
+    <form class="search" id="searchForm" autocomplete="off">
+      <div class="search-label">选择日期 / Choose a date</div>
+      <div class="search-controls">
+        <label class="field"><span>年 / Year</span><select id="yearSel" aria-label="年 / Year"></select></label>
+        <label class="field"><span>月 / Month</span><select id="monthSel" aria-label="月 / Month"></select></label>
+        <label class="field"><span>日 / Day</span><select id="daySel" aria-label="日 / Day"></select></label>
+        <button class="search-btn" type="submit" aria-label="搜索 / Search">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"></circle>
+            <line x1="15.5" y1="15.5" x2="21" y2="21" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"></line>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </header>
+  <div class="content">
+    <div class="card-wrap">
+      <svg class="card" id="card" viewBox="0 0 280 400" role="img" aria-label="方块A" shape-rendering="crispEdges"></svg>
+    </div>
+    <div class="poker">
+      <div class="poker-cn" id="pokerCn">太阳日，方块A周，一月，方块年</div>
+      <div class="poker-en" id="pokerEn">Solis, Week of Ace of Diamonds, 1st Month, Year of Diamonds</div>
+    </div>
+    <div class="greg" id="greg">1984年1月1日 / 1 Jan 1984</div>
+  </div>
+</main>
+<script>
+'use strict';
+
+/* ===== 基础数据 ===== */
+const SUITS = ['♦','♣','♥','♠'];
+const SUIT_CN = ['方块','梅花','红心','黑桃'];
+const SUIT_EN = ['Diamonds','Clubs','Hearts','Spades'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RANK_EN = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King'];
+const MONTH_CN = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月','十三月'];
+const MONTH_EN = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th','13th'];
+const YEAR_CN = ['方块年','梅花年','红心年','黑桃年'];
+const YEAR_EN = ['Year of Diamonds','Year of Clubs','Year of Hearts','Year of Spades'];
+const GREG_MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WEEKDAYS = [
+  {cn:'太阳日', en:'Solis',    sym:'☉'},
+  {cn:'月亮日', en:'Luna',     sym:'☾'},
+  {cn:'火星日', en:'Martis',   sym:'♂'},
+  {cn:'水星日', en:'Mercurii', sym:'☿'},
+  {cn:'木星日', en:'Jovis',    sym:'♃'},
+  {cn:'金星日', en:'Veneris',  sym:'♀'},
+  {cn:'土星日', en:'Saturni',  sym:'♄'}
+];
+const SEASONS = ['spring','summer','autumn','winter'];
+const SEASON_THEME = {
+  spring:'#f6d2db',
+  summer:'#d7ecc9',
+  autumn:'#f5d9a6',
+  winter:'#e9eff2'
+};
+
+/* ===== 5×7 像素字 ===== */
+const FONT = {
+  'A':['01110','10001','10001','11111','10001','10001','10001'],
+  '2':['01110','10001','00001','00010','00100','01000','11111'],
+  '3':['11111','00010','00100','00010','00001','10001','01110'],
+  '4':['00010','00110','01010','10010','11111','00010','00010'],
+  '5':['11111','10000','11110','00001','00001','10001','01110'],
+  '6':['00110','01000','10000','11110','10001','10001','01110'],
+  '7':['11111','00001','00010','00100','01000','01000','01000'],
+  '8':['01110','10001','10001','01110','10001','10001','01110'],
+  '9':['01110','10001','10001','01111','00001','00010','01100'],
+  '0':['01110','10001','10011','10101','11001','10001','01110'],
+  '1':['00100','01100','00100','00100','00100','00100','01110'],
+  'J':['00111','00010','00010','00010','00010','10010','01100'],
+  'Q':['01110','10001','10001','10001','10101','10010','01101'],
+  'K':['10001','10010','10100','11000','10100','10010','10001'],
+  'O':['01110','10001','10001','10001','10001','10001','01110'],
+  'E':['11111','10000','10000','11110','10000','10000','11111'],
+  'R':['11110','10001','10001','11110','10100','10010','10001']
+};
+
+/* ===== 9×9 像素花色 ===== */
+const PIX_SUIT = {
+  0:[
+    '000010000',
+    '000111000',
+    '001111100',
+    '011111110',
+    '111111111',
+    '011111110',
+    '001111100',
+    '000111000',
+    '000010000'
+  ], /* ♦ */
+  1:[
+    '000111000',
+    '001111100',
+    '001111100',
+    '110111011',
+    '111111111',
+    '011111110',
+    '000111000',
+    '000111000',
+    '000111000'
+  ], /* ♣ 三瓣 */
+  2:[
+    '001100110',
+    '011111111',
+    '111111111',
+    '111111111',
+    '111111111',
+    '011111110',
+    '001111100',
+    '000111000',
+    '000010000'
+  ], /* ♥ */
+  3:[
+    '000010000',
+    '000111000',
+    '001111100',
+    '011111110',
+    '111111111',
+    '111111111',
+    '110111011',
+    '000111000',
+    '000111000'
+  ]  /* ♠ 倒心 */
+};
+
+/* ===== 花牌/丑角像素图（32×48 单人上半身，不镜像） ===== */
+const PORTRAIT_PALETTE = {
+  K:'#1b1b1b', W:'#fff8e8', R:'#c23b2e', Y:'#d8a548', B:'#2f5f8f',
+  G:'#9aa3ad', M:'#b8bcc4', D:'#5f6570', H:'#6b4a2f', S:'#f2c9a8'
+};
+const JACK_PIX = [
+  '................................',
+  '................K...............',
+  '............KKKKMKKKK...........',
+  '...........KMMMMMMMMMK..........',
+  '.........KKMMMMMMMMMMMKK........',
+  '.........KMMMMMMMMMMMMMK........',
+  '........KMMMMMMMMMMMMMMMK.......',
+  '........KMMMMMMMMMMMMMMMK.......',
+  '........KMMMMMMMMMMMMMMMK..KKK..',
+  '.......KMMMMMMMMMMMMMMMMMK.KWK..',
+  '........KMMMMMMMKMMMMMMMK..KWK..',
+  '.......KDDDDDDDKKKDDDDDDDK.KWK..',
+  '.......KMKKKKKKKMKKKKKKKMK.KWK..',
+  '.......KMKMMKSSKMKSSKMMKM..KWK..',
+  '.......KMKKKSSSKMKSSSKKKM..KWK..',
+  '.......KM..KSSSKMKSSSK.KM..KWK..',
+  '.......KM..KSWKKMKWKSK.KM..KWK..',
+  '.......KK.KSSKKKMKKKSSKKK..KWK..',
+  '...........KSSSKKKSSSK.....KWK..',
+  '...........KRSSSSSSRSK.....KWK..',
+  '...........KSSSRRRSSSK.....KWK..',
+  '............KSSSSSSSK......KWK..',
+  '............KKSSSSSKK......KWK..',
+  '.............KKKSKKK.......KWK..',
+  '.......KKKKKKKKKKKKKKKKKKK.KWK..',
+  '.......KMMMMMMMMMMMMMMMMMK.KWK..',
+  '.....KKKKDMMDMMDMMDMMDMKKKKKWK..',
+  '.....KMMKMMMMMMMMMMMMMMKMMKKWK..',
+  '.....KMMKDMMDMMDMMDMMDMKMKYYYYYK',
+  '.....KMMKMMMMMMMMMMMMMMKMKKKKKKK',
+  '.....KMMKDMMDMMDMMDMMDMKMMSRRK..',
+  '.....KMMKMMMMMMMMMMMMMMKMMSRRK..',
+  '.....KMMKMMMMMMMMMMMMMMKMMKRRK..',
+  '.....KMMKRRRRRRRRRRRRRRKMMKRRK..',
+  '.....KMMKRRRRRRRRRRRRRRKMMKRRK..',
+  '.....KMMKRRRRBBBBBBRRRRKMMKRRK..',
+  '.....KMMKRRRRBBBBBBRRRRKMMKRRK..',
+  '.....KMMK.RRRBBBBBBRRRRKMMKRRK..',
+  '.....KSMK.RRRRRRRRRRRRRKMSKRRK..',
+  '.....KKKK.RRRRRRRRRRRRRKKKKRRK..',
+  '..........RRRRYYYYRRRRR...YYYY..',
+  '..........RRRRYYYYRRRRR...YYYY..',
+  '..........RRRRYYYYRRRRR...YYYY..',
+  '..........RRRRYYYYRRRRR.........',
+  '...........RRRYYYYRRRR..........',
+  '...........RRRRRRRRRRR..........',
+  '...........RRRRRRRRRRR..........',
+  '...........RRRRRRRRRRR..........'
+];
+const QUEEN_PIX = [
+  '............Y..Y..Y..Y..........',
+  '............K..K..K..K..........',
+  '...........KYKKYKKYKKYK.........',
+  '...........KRKKRKKRKKRK.........',
+  '..........KYYKYYKYYKYYYK........',
+  '..........KYYKYYKYYKYYYK........',
+  '..........KYYYYYYYYYYYK.........',
+  '.........KKYYYYYYYYYYYKK........',
+  '........KKKKKKKKKKKKKKKKK.......',
+  '........KKHHKSSSSSSSKHHKK.......',
+  '.......KWKHKSSSSSSSSSKHKWK......',
+  '.......KWKHKSSSSSSSSSKHKWK......',
+  '.......KWKHKSWKSSSWKSKHKWK......',
+  '.......KKHKSSKKSSSKKSSKHKK......',
+  '.......KWKHKSSSSSSSSSKHKWK......',
+  '......KWWKHKRSSSSSSRSKHKWWK.....',
+  '.......KWKHKSSSRRRSSSKHKWK......',
+  '.......KWKHHKSSSSSSSKHHKWK......',
+  '.......KWWKHKKSSSSSKKHKWWK......',
+  '.......KWWWKHKKKSKKKHKWWWK......',
+  '.......KWWWKKHHHKHHHKKWWWK......',
+  '........KWWWYYYYYYYYWWWWK.......',
+  '........KKWWYYYYYYYYWWWKK.......',
+  '.......KKKKKKKKKKKKKKKKKKK......',
+  '.......KBBBBBBBBBBBBBBBBBK......',
+  '.....KKKKBBBBBBBBBBBBBBKKKK.....',
+  '.....KBBKBBBBBBBBBBBBBBKBBK.....',
+  '.....KBBKBBBYYYYYYYYBBBKBBK.....',
+  '.....KBBKBBBYYYYYYYYBBBKBBK.....',
+  '.....KBBKBBBBBBBBBBBBBBKBBK.....',
+  '.....KBBKBBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKBBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKBBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKBBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKBBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKKBBBBRRRRBBBBBKBBK.....',
+  '.....KBBKKBBBBRRRRBBBBBKBBK.....',
+  '.....KSBKKBBBBBBBBBBBBBKBSK.....',
+  '.....KKKKKBBBBBBBBBBBBBKKKK.....',
+  '.........KBBBBBBBBBBBBBK........',
+  '.........KBBBBBBBBBBBBBK........',
+  '.........KBBBBBBBBBBBBBK........',
+  '.........KBBBBBBBBBBBBBK........',
+  '..........KBBBBBBBBBBBK.........',
+  '..........KBBBBBBBBBBBK.........',
+  '..........KBBBBBBBBBBBK.........',
+  '..........KBBBBBBBBBBBK.........',
+  '..........KKKKKKKKKKKKK.........'
+];
+const KING_PIX = [
+  '..........Y..Y..Y..Y...Y........',
+  '..........K..K..K..K...K........',
+  '.........KYKKYKKYKKYK.KYK.......',
+  '.........KRKKRKKRKKRK.KRK.......',
+  '........KYYKYYKYYKYYYKYYYK......',
+  '........KYYKYYKYYKYYYKYYYK......',
+  '........KYYYYYYYYYYYYYYYK.......',
+  '........KYYYYYYYYYYYYYYYK.......',
+  '........KKKKKKKKKKKKKKKKK.......',
+  '.........KKGKSSSSSSSKGKK........',
+  '.........KGKSSSSSSSSSKGK........',
+  '........KGGKSSSSSSSSSKGGK.......',
+  '........KGGKSWKSSSWKSKGGK.......',
+  '........KGKSSKKSSSKKSSKGK.......',
+  '........KGGKSSSSSSSSSKGGK.......',
+  '.......KGGGKRSSSSSSRSKGGGK......',
+  '........KGGKSSSRRRSSSKGGK.......',
+  '........KGGGKSSSSSSSKGGGK.......',
+  '........KGGGKKSSSSSKKGGGK.......',
+  '........KGGGGKKKSKKKGGGGK.......',
+  '.........KGGGGGGKGGGGGGK........',
+  '.........KKGGGGGGGGGGGKK........',
+  '..........KGGGGGGGGGGGK.........',
+  '...........KKGGGGGGGKK..........',
+  '......KKKKKKKKKKKKKKKKKKKKK.....',
+  '......KRRRRRRRRRRRRRRRRRRRK.....',
+  '.....KKKKRRRRRRRRRRRRRRKKKK.....',
+  '.....KRRKRRRRRRRRRRRRRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRRRRBBBBRRRRRKRRK.....',
+  '.....KRRKRRRRRBBBBRRRRRKRRK.....',
+  '.....KRRKRRRRRBBBBRRRRRKRRK.....',
+  '.....KRRKRRRYYYYYYYYRRRKRRK.....',
+  '.....KRRKRRRYYYYYYYYRRRKRRK.....',
+  '.....KRRKRRRRRRRRRRRRRRKRRK.....',
+  '.....KRRKRRRRRRRRRRRRRRKRRK.....',
+  '.....KSRKRRRRRRRRRRRRRRKRSK.....',
+  '.....KKKKRRRRRRRRRRRRRRKKKK.....',
+  '........KRRRRRRRRRRRRRRRK.......',
+  '........KRRRRRRRRRRRRRRRK.......',
+  '........KRRRRRRRRRRRRRRRK.......',
+  '........KKRRRRRRRRRRRRRKK.......',
+  '.........KRRRRRRRRRRRRRK........',
+  '.........KRRRRRRRRRRRRRK........',
+  '.........KRRRRRRRRRRRRRK........',
+  '.........KKKKKKKKKKKKKKK........'
+];
+const JOKER_PIX = [
+  '................................',
+  '................................',
+  '................................',
+  '................................',
+  '......KKKKK..........KKKKK......',
+  '......KRRRK..........KRRRK......',
+  '......KRRRK..........KRRRKK.....',
+  '......KRRRK..........KKRRRK.....',
+  '......KRRRKK........KKKRRRK.....',
+  '......KKKKKKK......KKKKKKKK.....',
+  '......KKYYYKKKKKKKKKRKYYYKK.....',
+  '......KKYYYKKRRRRRRKRKYYYKK.....',
+  '......KKYYYKKRRRRRRKRKYYYK......',
+  '......KKKKKKKRRRRRRKRKKKKK......',
+  '.......KRKRRKKKKKKKKRRRKK.......',
+  '.......KKKKKKSSSSSSKKKKKK.......',
+  '...........KSSSSSSSSSK..........',
+  '...........KSWKSSSWKSK..........',
+  '..........KSSKKSSSKKSSK.........',
+  '...........KSSSSSSSSSK..........',
+  '...........KRSSSSSSRSK..........',
+  '...........KSSSRRRSSSK..........',
+  '............KSSSSSSSK...........',
+  '............KKSSKSSKK...........',
+  '..........KKKKKKWKKKKKK.........',
+  '........KKWWWWWWWWWWWWWKK.......',
+  '......KKWWWWWWWWWWWWWWWWWKK.....',
+  '......KWWWWWWWWWWWWWWWWWWWK.....',
+  '.....KWWWWWWWWWWWWWWWWWWWWWK....',
+  '......KWWWWWWWWWWWWWWWWWWWK.....',
+  '......KKWWKWWKWWKWWKWWKWWKK.....',
+  '........KKWWWWWWWWWWWWWKK.......',
+  '.......KKKKKKKKKKKKKKKKKKK......',
+  '.......KRRRRRRRRRRRRRRRRRK......',
+  '.....KKKKRRRRRRRRRRRRRRKKKK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRRRRRRRRRRRRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRRRRRRRRRRRRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKRRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKKRRRRRRRRRRRRRKRRK.....',
+  '.....KRRKKRYYYBBBBYYYRRKRRK.....',
+  '.....KRRKKRYYYBBBBYYYRRKRRK.....',
+  '.....KSRKKRRRRRRRRRRRRRKRSK.....',
+  '.....KKKKKKKKKKKKKKKKKKKKKK.....'
+];
+const PORTRAITS = { J: JACK_PIX, Q: QUEEN_PIX, K: KING_PIX };
+
+
+
+
+
+
+
+
+
+/* ===== 日期计算 ===== */
+function isLeap(y){
+  return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+}
+function dayOfYear(dt){
+  const y = dt.getFullYear();
+  const start = Date.UTC(y, 0, 1);
+  const cur = Date.UTC(y, dt.getMonth(), dt.getDate());
+  return Math.floor((cur - start) / 86400000) + 1;
+}
+/**
+ * 13 个月 × 28 天 + 52 周 × 7 天 + 4 花色 × 13 周：
+ *   月 = 28 天块（1..13 → 一月..十三月）
+ *   周 = 从 1 月 1 日起每 7 天一周（1..52）
+ *   花色 = 连续 13 周（1..13 ♦，14..26 ♣，27..39 ♥，40..52 ♠）
+ *   周牌 = 花色 + 该花色内的第 1..13 张（A..K）
+ *   年 = 364 天 + 年末 1 个丑角日（平年）或 2 个（闰年）
+ */
+function computeCalendar(dt){
+  const y = dt.getFullYear();
+  const doy = dayOfYear(dt);
+  const leap = isLeap(y);
+  const yearSuit = ((y - 1984) % 4 + 4) % 4;
+  const wd = WEEKDAYS[dt.getDay()];
+  const greg = { y, m: dt.getMonth() + 1, d: dt.getDate() };
+
+  if (doy > 364){
+    const bw = leap && doy === 365;
+    return { kind:'joker', bw, wd, yearSuit, greg };
+  }
+
+  const month = Math.ceil(doy / 28);          // 1..13
+  const dayInMonth = ((doy - 1) % 28) + 1;    // 1..28
+  const week = Math.ceil(doy / 7);            // 1..52
+  const suit = Math.floor((week - 1) / 13);   // 0..3，每个花色连续 13 周
+  const rank = (week - 1) % 13;               // 0..12
+  return { kind:'card', wd, yearSuit, month, dayInMonth, week, suit, rank, greg };
+}
+
+/* ===== SVG 像素绘制工具 ===== */
+function R(x, y, w, h, fill){
+  return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + fill + '"/>';
+}
+function glyph(ch, x, y, cell, color){
+  const rows = FONT[ch];
+  if (!rows) return '';
+  let s = '';
+  for (let r = 0; r < rows.length; r++){
+    for (let c = 0; c < rows[r].length; c++){
+      if (rows[r][c] === '1') s += R(x + c * cell, y + r * cell, cell, cell, color);
+    }
+  }
+  return s;
+}
+function drawText(str, x, y, cell, color){
+  let s = '';
+  for (let i = 0; i < str.length; i++){
+    s += glyph(str[i], x + i * 6 * cell, y, cell, color);
+  }
+  return s;
+}
+function suitIcon(suit, x, y, cell, color){
+  const rows = PIX_SUIT[suit];
+  let s = '';
+  for (let r = 0; r < rows.length; r++){
+    for (let c = 0; c < rows[r].length; c++){
+      if (rows[r][c] === '1') s += R(x + c * cell, y + r * cell, cell, cell, color);
+    }
+  }
+  return s;
+}
+
+/* ===== 牌面 ===== */
+function renderPips(suit, rank, color){
+  const n = rank + 1;              // 2..10
+  const cell = 5;
+  const w = 9 * cell;
+  const cx = 140 - w / 2;
+  const lx = 70 - w / 2;
+  const rx = 210 - w / 2;
+  const top = 64, upper = 122, mid = 179, lower = 236, bottom = 294;
+  const pos = [];
+  const add = (x, y) => pos.push([x, y]);
+
+  if (n === 2){ add(cx, top); add(cx, bottom); }
+  else if (n === 3){ add(cx, top); add(cx, mid); add(cx, bottom); }
+  else if (n === 4){ add(lx, top); add(rx, top); add(lx, bottom); add(rx, bottom); }
+  else if (n === 5){ add(lx, top); add(rx, top); add(cx, mid); add(lx, bottom); add(rx, bottom); }
+  else if (n === 6){ add(lx, top); add(rx, top); add(lx, mid); add(rx, mid); add(lx, bottom); add(rx, bottom); }
+  else if (n === 7){ add(lx, top); add(rx, top); add(cx, upper); add(lx, mid); add(rx, mid); add(lx, bottom); add(rx, bottom); }
+  else if (n === 8){ add(lx, top); add(rx, top); add(cx, upper); add(lx, mid); add(rx, mid); add(cx, lower); add(lx, bottom); add(rx, bottom); }
+  else if (n === 9){ add(lx, top); add(rx, top); add(lx, upper); add(rx, upper); add(cx, mid); add(lx, lower); add(rx, lower); add(lx, bottom); add(rx, bottom); }
+  else if (n === 10){ add(lx, top); add(rx, top); add(lx, upper); add(rx, upper); add(cx, upper); add(cx, lower); add(lx, lower); add(rx, lower); add(lx, bottom); add(rx, bottom); }
+
+  let s = '';
+  for (let i = 0; i < pos.length; i++) s += suitIcon(suit, pos[i][0], pos[i][1], cell, color);
+  return s;
+}
+
+function weekdaySymbolSVG(sym, color){
+  return "<text x=\"258\" y=\"44\" text-anchor=\"end\" font-family=\"'Segoe UI Symbol','Apple Symbols','Noto Sans Symbols',sans-serif\" font-size=\"26\" fill=\"" + color + "\" shape-rendering=\"geometricPrecision\">" + sym + "</text>";
+}
+
+function renderPortrait(letter){
+  const rows = PORTRAITS[letter];
+  if (!rows) return '';
+  let s = '';
+  /* 牌芯黑框，保留复古黄牌面 */
+  s += '<rect x="50" y="72" width="180" height="256" fill="none" stroke="#1b1b1b" stroke-width="2"/>';
+  const cell = 5;
+  const ox = 60;
+  const oy = 80;
+  for (let r = 0; r < rows.length; r++){
+    for (let c = 0; c < rows[r].length; c++){
+      const ch = rows[r][c];
+      if (ch === '.') continue;
+      s += R(ox + c * cell, oy + r * cell, cell, cell, PORTRAIT_PALETTE[ch] || '#1b1b1b');
+    }
+  }
+  return s;
+}
+
+function renderCardSVG(suit, rank, weekdaySym){
+  weekdaySym = weekdaySym || '☉';
+  const isRed = suit === 0 || suit === 2;
+  const color = isRed ? '#c23b2e' : '#1b1b1b';
+  const gold = '#c9a24a';
+  let s = '';
+
+  s += '<rect x="0" y="0" width="280" height="400" fill="#121722"/>';
+  s += '<rect x="6" y="6" width="268" height="388" fill="#f4ead4"/>';
+  s += '<rect x="14" y="14" width="252" height="372" fill="none" stroke="' + gold + '" stroke-width="2"/>';
+  s += '<rect x="18" y="18" width="244" height="364" fill="none" stroke="rgba(27,27,27,.18)" stroke-width="1"/>';
+
+  const rankStr = RANKS[rank];
+  const cell = rankStr === '10' ? 2.4 : 3.2;
+  const rankX = 20, rankY = 22;
+  const suitCell = 2;
+  const suitY = rankY + 7 * cell + 5;
+
+  s += drawText(rankStr, rankX, rankY, cell, color);
+  s += suitIcon(suit, rankX, suitY, suitCell, color);
+
+  s += '<g transform="rotate(180 140 200)">';
+  s += drawText(rankStr, rankX, rankY, cell, color);
+  s += suitIcon(suit, rankX, suitY, suitCell, color);
+  s += '</g>';
+
+  /* 每日 unicode 符号：右上角，与点数同高，用花色颜色 */
+  s += weekdaySymbolSVG(weekdaySym, color);
+
+  if (rank === 0){
+    s += suitIcon(suit, 140 - 40.5, 200 - 40.5, 9, color);
+  } else if (rank >= 10){
+    s += renderPortrait(RANKS[rank]);
+  } else {
+    s += renderPips(suit, rank, color);
+  }
+  return s;
+}
+
+function renderJokerSVG(bw, weekdaySym){
+  weekdaySym = weekdaySym || '☉';
+  const map = bw
+    ? { K:'#2c2018', W:'#eee0c8', R:'#8d5a46', Y:'#c0a170', B:'#6d6350', G:'#9c8e7a', M:'#b9a98d', D:'#4a3a2e', H:'#6b4a2f', S:'#e2c6a6' }
+    : { K:'#1b1b1b', W:'#fff8e8', R:'#c23b2e', Y:'#d8a548', B:'#2f5f8f', G:'#9aa3ad', M:'#b8bcc4', D:'#5f6570', H:'#6b4a2f', S:'#f2c9a8' };
+
+  let s = '';
+  s += '<rect x="0" y="0" width="280" height="400" fill="#121722"/>';
+  s += '<rect x="6" y="6" width="268" height="388" fill="#f4ead4"/>';
+  s += '<rect x="14" y="14" width="252" height="372" fill="none" stroke="#c9a24a" stroke-width="2"/>';
+  s += '<rect x="50" y="72" width="180" height="256" fill="none" stroke="' + map.K + '" stroke-width="2"/>';
+
+  const cell = 5;
+  const ox = 60;
+  const oy = 80;
+  for (let r = 0; r < JOKER_PIX.length; r++){
+    const row = JOKER_PIX[r];
+    for (let c = 0; c < row.length; c++){
+      const ch = row[c];
+      if (ch === '.') continue;
+      s += R(ox + c * cell, oy + r * cell, cell, cell, map[ch] || map.K);
+    }
+  }
+
+  /* 两侧竖排 JOKER */
+  s += '<g transform="translate(18,258) rotate(-90)">' + drawText('JOKER', 0, 0, 4, map.K) + '</g>';
+  s += '<g transform="translate(262,142) rotate(90)">' + drawText('JOKER', 0, 0, 4, map.K) + '</g>';
+
+  /* 每日 unicode 符号：右上角，与点数同高 */
+  s += weekdaySymbolSVG(weekdaySym, map.K);
+  return s;
+}
+
+/* ===== 渲染页面 + 日期搜索 ===== */
+if (typeof document !== 'undefined'){
+  const el = {
+    card: document.getElementById('card'),
+    pokerCn: document.getElementById('pokerCn'),
+    pokerEn: document.getElementById('pokerEn'),
+    greg: document.getElementById('greg'),
+    yearSel: document.getElementById('yearSel'),
+    monthSel: document.getElementById('monthSel'),
+    daySel: document.getElementById('daySel'),
+    searchForm: document.getElementById('searchForm'),
+    backBtn: document.getElementById('backBtn')
+  };
+
+  const MONTH_LABELS = [
+    '1月 / Jan','2月 / Feb','3月 / Mar','4月 / Apr','5月 / May','6月 / Jun',
+    '7月 / Jul','8月 / Aug','9月 / Sep','10月 / Oct','11月 / Nov','12月 / Dec'
+  ];
+
+  let lastKey = '';
+  let overrideDate = null;
+
+  function isSameDay(a, b){
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  }
+
+  function ymd(dt){
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return dt.getFullYear() + '-' + m + '-' + d;
+  }
+
+  function parseUrlDate(){
+    const raw = new URLSearchParams(location.search).get('date');
+    if (!raw) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+    if (!m) return null;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    const dt = new Date(y, mo - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || y < 1984) return null;
+    return dt;
+  }
+
+  function getTargetDate(){
+    return overrideDate ? new Date(overrideDate) : new Date();
+  }
+
+  function syncUrl(dt){
+    try {
+      const url = new URL(location.href);
+      if (dt) url.searchParams.set('date', ymd(dt));
+      else url.searchParams.delete('date');
+      history.replaceState(null, '', url.href);
+    } catch (e) { /* file:// 或受限环境忽略 */ }
+  }
+
+  function populateYears(){
+    const now = new Date().getFullYear();
+    const max = Math.max(2100, now);
+    let html = '';
+    for (let y = 1984; y <= max; y++){
+      html += '<option value="' + y + '">' + y + '</option>';
+    }
+    el.yearSel.innerHTML = html;
+  }
+
+  function populateMonths(){
+    let html = '';
+    for (let m = 1; m <= 12; m++){
+      html += '<option value="' + m + '">' + MONTH_LABELS[m - 1] + '</option>';
+    }
+    el.monthSel.innerHTML = html;
+  }
+
+  function daysInMonth(y, m){
+    return new Date(y, m, 0).getDate();
+  }
+
+  function rebuildDays(y, m, selected){
+    const max = daysInMonth(y, m);
+    let html = '';
+    for (let d = 1; d <= max; d++){
+      html += '<option value="' + d + '">' + d + '日</option>';
+    }
+    el.daySel.innerHTML = html;
+    el.daySel.value = String(Math.min(Math.max(1, selected || 1), max));
+  }
+
+  function syncSelects(dt){
+    el.yearSel.value = String(dt.getFullYear());
+    el.monthSel.value = String(dt.getMonth() + 1);
+    rebuildDays(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+  }
+
+  function updateBack(){
+    el.backBtn.hidden = !overrideDate;
+  }
+
+  function render(dt){
+    const info = computeCalendar(dt);
+    const season = info.kind === 'joker' ? 'winter' : SEASONS[info.suit];
+    document.body.dataset.season = season;
+    if (document.querySelector){
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', SEASON_THEME[season]);
+    }
+
+    if (info.kind === 'joker'){
+      el.card.setAttribute('aria-label', (info.bw ? '黑白丑角牌' : '彩色丑角牌') + '，' + info.wd.cn);
+      el.card.innerHTML = renderJokerSVG(info.bw, info.wd.sym);
+      el.pokerCn.textContent = info.wd.cn + '，' + (info.bw ? '黑白丑角日' : '彩色丑角日') + '，' + YEAR_CN[info.yearSuit];
+      el.pokerEn.textContent = info.wd.en + ', ' + (info.bw ? 'Black & White Joker' : 'Colorful Joker') + ', ' + YEAR_EN[info.yearSuit];
+    } else {
+      const cardName = SUIT_CN[info.suit] + RANKS[info.rank];
+      el.card.setAttribute('aria-label', cardName + '，' + info.wd.cn);
+      el.card.innerHTML = renderCardSVG(info.suit, info.rank, info.wd.sym);
+      el.pokerCn.textContent =
+        info.wd.cn + '，' +
+        SUIT_CN[info.suit] + RANKS[info.rank] + '周，' +
+        MONTH_CN[info.month - 1] + '，' +
+        YEAR_CN[info.yearSuit];
+      el.pokerEn.textContent =
+        info.wd.en + ', Week of ' +
+        RANK_EN[info.rank] + ' of ' + SUIT_EN[info.suit] + ', ' +
+        MONTH_EN[info.month - 1] + ' Month, ' +
+        YEAR_EN[info.yearSuit];
+    }
+
+    const g = info.greg;
+    el.greg.textContent = g.y + '年' + g.m + '月' + g.d + '日 / ' + g.d + ' ' + GREG_MONTH_EN[g.m - 1] + ' ' + g.y;
+  }
+
+  function keyOf(dt){
+    return dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+  }
+
+  function tick(force){
+    const dt = getTargetDate();
+    const key = keyOf(dt);
+    if (force || key !== lastKey){
+      lastKey = key;
+      render(dt);
+      if (!overrideDate) syncSelects(dt);
+    }
+  }
+
+  function setDate(dt){
+    if (dt && !isSameDay(dt, new Date())) overrideDate = dt;
+    else overrideDate = null;
+    syncUrl(overrideDate);
+    updateBack();
+    syncSelects(getTargetDate());
+    tick(true);
+  }
+
+  function applySelects(){
+    const y = +el.yearSel.value, m = +el.monthSel.value, d = +el.daySel.value;
+    const dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d || y < 1984) return;
+    setDate(dt);
+  }
+
+  el.yearSel.addEventListener('change', function(){
+    rebuildDays(+el.yearSel.value, +el.monthSel.value, +el.daySel.value);
+    applySelects();
+  });
+  el.monthSel.addEventListener('change', function(){
+    rebuildDays(+el.yearSel.value, +el.monthSel.value, +el.daySel.value);
+    applySelects();
+  });
+  el.daySel.addEventListener('change', applySelects);
+  el.searchForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    applySelects();
+  });
+  el.backBtn.addEventListener('click', function(){
+    setDate(null);
+  });
+
+  overrideDate = parseUrlDate();
+  if (overrideDate && isSameDay(overrideDate, new Date())) overrideDate = null;
+  populateYears();
+  populateMonths();
+  syncSelects(getTargetDate());
+  updateBack();
+  tick(true);
+
+  setInterval(function(){ tick(false); }, 60000);
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) tick(true);
+  });
+}
+
+/* 调试/测试钩子 */
+if (typeof window !== 'undefined'){
+  window.__pokerCalendar = {
+    computeCalendar: computeCalendar,
+    dayOfYear: dayOfYear,
+    isLeap: isLeap,
+    renderCardSVG: renderCardSVG,
+    renderJokerSVG: renderJokerSVG,
+    JOKER_PIX: JOKER_PIX,
+    PORTRAITS: PORTRAITS,
+    PORTRAIT_PALETTE: PORTRAIT_PALETTE
+  };
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
